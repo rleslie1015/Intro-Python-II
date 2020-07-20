@@ -1,7 +1,7 @@
 from room import Room
 from player import Player
 from item import Item
-
+from character import Enemy
 
 # Declare all the rooms
 
@@ -41,101 +41,116 @@ The only door leads back east to the parlor."""),
 
 
 # Link rooms together
+room['outside'].link_room(room['foyer'], 'north')
+room['foyer'].link_room(room['outside'], 'south')
+room['foyer'].link_room(room['overlook'], 'north')
+room['foyer'].link_room(room['narrow'], 'east')
+room['foyer'].link_room(room['parlor'], 'west')
+room['parlor'].link_room(room['foyer'], 'east')
+room['parlor'].link_room(room['kitchen'], 'north')
+room['kitchen'].link_room(room['parlor'], 'south')
+room['kitchen'].link_room(room['dining'], 'north')
+room['dining'].link_room(room['kitchen'], 'south')
+room['dining'].link_room(room['overlook'], 'east')
+room['parlor'].link_room(room['music'], 'west')
+room['music'].link_room(room['parlor'], 'east')
+room['overlook'].link_room(room['foyer'], 'south')
+room['overlook'].link_room(room['dining'], 'west')
+room['narrow'].link_room(room['foyer'], 'west')
+room['narrow'].link_room(room['treasure'], 'north')
+room['narrow'].link_room(room['library'], 'east')
+room['library'].link_room(room['narrow'], 'west')
+room['treasure'].link_room(room['narrow'], 'south')
 
-room['outside'].n_to = room['foyer']
-room['foyer'].s_to = room['outside']
-room['foyer'].n_to = room['overlook']
-room['foyer'].e_to = room['narrow']
-room['foyer'].w_to = room['parlor']
-room['parlor'].e_to = room['foyer']
-room['parlor'].n_to = room['kitchen']
-room['kitchen'].s_to = room['parlor']
-room['kitchen'].n_to = room['dining']
-room['dining'].s_to = room['kitchen']
-room['dining'].e_to = room['overlook']
-room['parlor'].w_to = room['music']
-room['music'].e_to = room['parlor']
-room['overlook'].s_to = room['foyer']
-room['overlook'].w_to = room['dining']
-room['narrow'].w_to = room['foyer']
-room['narrow'].n_to = room['treasure']
-room['narrow'].e_to = room['library']
-room['library'].w_to = room['narrow']
-room['treasure'].s_to = room['narrow']
+# charactors 
+evilCasper = Enemy('Evil Casper', 'An angry evil spirit!')
+evilCasper.set_conversation('You are not welcome here, human. Prepare to die.')
+evilCasper.set_weakness('crossbow')
 
-# Items
-book = Item("book", "Contains a treasure map.")
-crossbow = Item("crossbow", "A powerful weapon.")
-key = Item("key", "Unlocks secret room.")
-shield = Item("shield", "Protects you from enemies and evil spirits.")
+# add charactors into rooms
+room['parlor'].set_character(evilCasper)
 
-room['library'].items = [book]
-room['music'].items = [crossbow, shield]
-room['dining'].items = [key]
-
+#add items into rooms 
+room['library'].add_item_to_room("treasure", "You win.")
+room['music'].add_item_to_room("crossbow", "A powerful, ancient weapon.")
+room['dining'].add_item_to_room("key", "Unlocks secret room.")
+room['overlook'].add_item_to_room("gun", "A pistol.")
+# room['library'].add_add_to_room("treasure", "you are winning")
 # Main
-# 
-def get_next(input, room):
-    key = input + "_to" 
-    if hasattr(player.current_room, key):
-        if getattr(room, key) is not None:
-            return getattr(room, key)
-    
-def interpret_input(input):
-    # split input
-    # destructor verb, object
-    # if verb is n/s/w/e
-        # player moves to that room player.move() ?
-    pass
+#
+
 # Make a new player object that is currently in the 'outside' room.
-player = Player("Player 1", room['outside'])
-
-# Write a loop that:
-# * Prints the current room name
-# * Prints the current description (the textwrap module might be useful here).
-# If the user enters a cardinal direction, attempt to move to the room there.
-
+name = input('Welcome brave adventurer! Enter your name to get started: ')
+player = Player(name, room['outside'])
 playing = True
 
-print(f"\n Welcome {player.name}! \n")
-
-print(f'You are standing in the {player.current_room.name}, just north of you lies a large mansion. \n')
+current_room = player.current_room # new variable that holds the starting room. 
+# current_room.get_info()
+print(F"{player.name}, to play navigate with 'west', 'north', 'south', or 'east', \n To obtain items, type 'get [item]'. To fight enter 'fight' and chose your weapon wisely! \n Find the treasure to win. Beware of enemies!")
+print(current_room.get_info())
 
 while playing is True:
-    selection = input("Enter direction to move >> ").lower().split() # * Waits for user input and decides what to do.
+    inhabitant = current_room.get_character()
+    room['library'].locked = True
 
-    # try: 
-
-    if len(selection) == 1 and selection[0] in ['n', 's', 'e', 'w', 'd', 'q']:
-        if selection[0] == 'd':
-            print(f'\n{player.current_room}')
-            player.current_room.possible_directions()
-        elif selection[0] == 'q':
-            print('Goodbye')
-            playing = False
-        else:
-            if player.current_room.new_room(f'{selection[0]}_to') != None:
-                new = player.current_room.new_room(f'{selection[0]}_to')
-                print(new)
-                # player.move(new)
-                print(player.current_room)
-            else:
-                print(" There is nothing in that direction. try 'd' to see available directions")
-                
-    elif len(selection) == 2:
-        if selection[0] in ['get', 'take' 'pick'] and player.current_room.hasitem(selection[1]):
-            print(selection[1])
-            index = player.current_room.list_items().index(selection[1])
-            player.get_item(player.current_room.items[1])
-            player.get_inventory()
-            continue
-        else:
-            print(selection)
-            print("That item is not in the room. ")
-            player.current_room.list_items()
+    if inhabitant is not None:
+        inhabitant.describe()
+        inhabitant.talk()
+        print("You must fight or die! Enter 'fight' to begin the battle!")
     else: 
-        print('Invalid input. try n, s, e, w in order to move or enter command "get book" to collect items')
-    # except ValueError: 
-    #     print("That move isn't allowed please choose another direction. ") # Print an error message if the movement isn't allowed.
+        current_room.get_info()
+        current_room.list_items()
 
-# If the user enters "q", quit the game.
+    print('-------------------')
+    
+    # if 'key' in player.get_inventory():
+    #     room['treasue'].locked = False
+
+    first, *second = input("Enter command >> ").lower().split(' ')
+    try: 
+        # if the user enters single command and that command is a direction or q or d 
+        if first in ['north', 'south', 'east', 'west', 'd', 'q']:
+            # if the command is d then print all possible directions 
+            if first == 'd':
+                current_room.get_info()
+                player.get_inventory()
+            # if the 
+            elif first == 'q':
+                print('Goodbye')
+                playing = False
+            else:
+                current_room = current_room.move(first)
+
+
+        elif first in ['get', 'take' 'pick']:
+            item = second[0]
+
+            if item in current_room.list_items():
+                print("** You picked up the " + item + " It's been added to your inventory. ** \n")
+                player.get_item(item)
+                current_room.set_items([])
+            else: 
+                print('** That item is not in this room **')
+        
+        elif first == 'fight':
+            if inhabitant is None:
+                print('** There are no enemies to fight, not yet. **')
+            # player
+            print(f'{player.name} vs {inhabitant.name}')
+            print('Choose your weapon')
+            weapon = input()
+            if weapon not in player.get_inventory():
+                print('You do not have that! Find items by exploring rooms and type get [item]')
+            else:
+                victory = inhabitant.fight(weapon)
+                if victory is True:
+                    current_room.set_character(None)
+                else:
+                    print("You lost! Try again.")
+                    playing=False
+
+        else:
+            print('come agein')
+    except ValueError: 
+        print("That move isn't allowed please choose another direction. ") # Print an error message if the movement isn't allowed.
+

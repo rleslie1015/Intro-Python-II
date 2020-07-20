@@ -9,7 +9,16 @@ class Item:
         return f'{self.name}, {self.description}'
 
     def __repr__(self): 
-        return f'{self.name}'  
+        return f'(Item({self.name}, {self.description})'  
 
     def on_take(self):
         print(f'you took {self.name}')
+
+    def on_drop(self):
+        print(f'you dropped {self.name}')
+    
+    def set_item(self, item):
+        self.item = item
+
+    def get_item(self):
+        return self.item
